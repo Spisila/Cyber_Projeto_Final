@@ -6,47 +6,54 @@ PORT = 5000
 
 clientes = []
 
-def enviar_para_todos(msg, cliente_atual):
-    for c in clientes:
-        if c != cliente_atual: 
-            try:
-                c.sendall(msg)
-            except:
-                pass
+#Função de broadcast
+def broadcast(mensagem, cliente_atual):
+  for cliente in clientes:
+    if cliente != cliente_atual: 
+      try:
+          cliente.sendall(mensagem)
+      except:
+          pass
 
-def lidar_com_cliente(conn, addr):
-    print(f"[CONEXÃO] Cliente conectado: {addr}")
-    clientes.append(conn)
+def lidar_com_cliente(conexao, endereco):
+  
+  print(f"Cliente conectado: {endereco}")
+  clientes.append(conexao)
 
-    try:
-        while True:
-            msg = conn.recv(1024)
-            if not msg:
-                break
+  try:
 
-            texto = msg.decode().strip()
-            print(f"[{addr}] {texto}")
+    #Loop de receber mensagens
+    while True:
+      mensagem = conexao.recv(1024)
 
-            enviar_para_todos(msg, conn)
+      texto = mensagem.decode().strip()
+      print(f"[{endereco}] {texto}")
 
-    except:
-        print(f"[ERRO] Problema com o cliente {addr}")
+      broadcast(mensagem, conexao)
 
-    print(f"[DESCONECTADO] {addr}")
-    clientes.remove(conn)
-    conn.close()
+  except:
+    print(f"Problema com o cliente {endereco}")
+
+  finally :
+    print(f"Cliente {endereco} desconectado")
+    clientes.remove(conexao)
+    conexao.close()
 
 def iniciar_servidor():
-    servidor = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    servidor.bind((HOST, PORT))
-    servidor.listen()
 
-    print(f"[SERVIDOR] Ouvindo em {HOST}:{PORT}")
+  #Cria o socket, bind no endereço e escuta 
+  servidor = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  servidor.bind((HOST, PORT))
+  servidor.listen()
 
-    while True:
-        conn, addr = servidor.accept()
-        thread = threading.Thread(target=lidar_com_cliente, args=(conn, addr))
-        thread.start()
+  print(f"Ouvindo em {HOST}:{PORT}")
+
+  #Loop do servidor
+  while True:
+    #Conexao do cliente no server threads
+    conexao, endereco = servidor.accept()
+    thread = threading.Thread(target=lidar_com_cliente, args=(conexao, endereco))
+    thread.start()
 
 if __name__ == "__main__":
-    iniciar_servidor()
+  iniciar_servidor()
