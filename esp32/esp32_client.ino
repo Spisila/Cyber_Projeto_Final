@@ -50,12 +50,19 @@ void enviarJSON() {
 
 void tratarComando(String cmd) {
   cmd.trim();
-  Serial.println("Recebido: " + cmd);
+
+  int pos = cmd.indexOf(':');
+  if (pos != -1) {
+    cmd = cmd.substring(pos + 1);
+    cmd.trim();
+  }
+
+  Serial.println("Comando limpo: " + cmd);
 
   if (cmd == "led_on") {
     digitalWrite(LED_PIN, HIGH);
     Serial.println("LED ligado");
-  } 
+  }
   else if (cmd == "led_off") {
     digitalWrite(LED_PIN, LOW);
     Serial.println("LED desligado");
